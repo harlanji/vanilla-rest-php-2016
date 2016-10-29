@@ -1,12 +1,16 @@
 <?php
 
-$db = new PDO('sqlite::memory:');
+function setup ($db) {
 
-$db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-$db->setAttribute( PDO::ATTR_CASE, PDO::CASE_LOWER );
-$db->setAttribute( PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC );
+  $db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+  $db->setAttribute( PDO::ATTR_CASE, PDO::CASE_LOWER );
+  $db->setAttribute( PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC );
 
-$db->exec("CREATE TABLE users (id INTEGER PRIMARY KEY NOT NULL, username TEXT NOT NULL)") . "\n";
+  $db->exec("CREATE TABLE users (id INTEGER PRIMARY KEY NOT NULL, username TEXT NOT NULL)") . "\n";
+
+
+  return $db;
+}
 
 // -- model
 // follows entity pattern
@@ -77,9 +81,7 @@ class User {
 
 // -- test
 
-function test_model () {
-  global $db;
-  
+function test_model ($db) {
   $alice = new User(1, 'alice');
   $alice->insert($db);
 
