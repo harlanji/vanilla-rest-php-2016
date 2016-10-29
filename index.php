@@ -65,6 +65,8 @@ function restHandler ($db, $method, $url, $headers = array(), $postBody = null) 
 
 
 function test_collection ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
   $alice = new User(1, 'Alice');
   $bob = new User(2, 'Bob');
 
@@ -73,6 +75,8 @@ function test_collection ($db) {
 
   $response = restHandler($db, 'GET', '/users');
 
+  echo "right status? " . ($response->status == 200);
+
   echo "2 results? " . count($response->body) . "\n";
   
   echo "has alice? " . in_array($alice, $response->body) . "\n";
@@ -80,28 +84,40 @@ function test_collection ($db) {
 }
 
 function test_create ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
   $userJson = array('id' => 1, 'username' => 'Alice');
   $response = restHandler($db, "PUT", "/users/1", array(), $userJson);
 
   $alice = User::selectById($db, 1);
 
-  echo "create: alice username = Alice X?: " . ($alice->username == "Alice") . "\n";
+  echo "right status? " . ($response->status == 201) . "\n";
+
+
+  echo "alice username = Alice X?: " . ($alice->username == "Alice") . "\n";
 }
 
 
   
 function test_read ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
   $alice = new User(1, 'Alice');
   $alice->insert($db);
 
   $response = restHandler($db, 'GET', '/users/1');
 
+  echo "right status? " . ($response->status == 200) . "\n";
+
+
   
-  echo "read: has alice? " . ($response && $response->body->id == 1) . "\n";
+  echo "has alice? " . ($response && $response->body->id == 1) . "\n";
 }
 
 
 function test_update ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
   $alice = new User(1, 'Alice');
 
   $alice->insert($db);
@@ -111,11 +127,17 @@ function test_update ($db) {
 
   $alice = User::selectById($db, 1);
 
+  echo "right status? " . ($response->status == 200) . "\n";
+
+
+
   echo "alice username = Alice X?: " . ($alice->username == "Alice X") . "\n";
 }
 
 
 function test_delete ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
   $response = restHandler($db, "DELETE", "/users/1");
 
   $alice = new User(1, 'Alice');
@@ -126,6 +148,9 @@ function test_delete ($db) {
   $response = restHandler($db, "DELETE", "/users/1");
 
   $alice = User::selectById($db, 1);
+
+  echo "right status? " . ($response->status == 200) . "\n";
+
 
   echo "alice deleted?: " . ($alice == null) . "\n";
 }
