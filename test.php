@@ -16,7 +16,11 @@ function test () {
   
   $db = setup(new PDO('sqlite::memory:'));
   test_create($db);
-  
+
+  $db = setup(new PDO('sqlite::memory:'));
+  test_create_exists($db);
+
+
   $db = setup(new PDO('sqlite::memory:'));
   test_read($db);
 

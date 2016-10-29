@@ -94,7 +94,25 @@ function test_create ($db) {
   echo "right status? " . ($response->status == 201) . "\n";
 
 
-  echo "alice username = Alice X?: " . ($alice->username == "Alice") . "\n";
+  echo "alice username = Alice?: " . ($alice->username == "Alice") . "\n";
+}
+
+function test_create_exists ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
+  $alice = new User(1, 'Alice');
+  $alice->insert($db);
+
+
+  $userJson = array('id' => 1, 'username' => 'Alice X');
+  $response = restHandler($db, "PUT", "/users/1", array(), $userJson);
+
+  $alice = User::selectById($db, 1);
+
+  echo "right status? " . ($response->status == 202) . "\n";
+
+
+  echo "alice username = Alice?: " . ($alice->username == "Alice") . "\n";
 }
 
 
