@@ -78,35 +78,3 @@ class User {
 
   // object equality check works in our favor for pojos http://stackoverflow.com/questions/17008622/is-there-a-equals-method-in-php-like-there-is-in-java
 }
-
-// -- test
-
-function test_model ($db) {
-  $alice = new User(1, 'alice');
-  $alice->insert($db);
-
-  $bob =  new User(2, 'bob');
-  $bob->insert($db);
-
-  $alice1 = User::selectById($db, 1);
-
-
-  echo "alice == alice1 before... equals: " . ($alice == $alice1) . " same: " . $alice->same($alice1) . "\n";
-  $alice1->username = "alicex";
-  echo "alice == alice1 after... equals: " . ($alice == $alice1) . " same: " . $alice->same($alice1) . "\n";
-
-  $alice1->update($db);
-  $alice2 = User::selectById($db, 1);
-
-  echo "All Users 1: " . json_encode(User::all($db)) . "\n"; // alicex, bob
-
-
-  $bob1 = User::selectById($db, 2);
-  $bob1->delete($db);
-  $bob2 = User::selectById($db, 2);
-
-  echo "Alice: " . json_encode($alice2) . "\n"; // username=alicex
-  echo "Bob: " . json_encode($bob2) . "\n"; // null
-
-  echo "All Users 2: " . json_encode(User::all($db)) . "\n"; // alicex
-}
