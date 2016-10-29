@@ -19,7 +19,7 @@ function updateUser($user, $postBody) {
 function restHandler ($db, $method, $url, $headers = array(), $postBody = null) {
 
   if ($method == "GET" && $url == "/users") {
-    return User::all($db);
+    return new Response(200, User::all($db));
   } else if (preg_match('/^\/users\/([\d]+)$/', $url, $matches, PREG_OFFSET_CAPTURE)) {
     $id = intval($matches[1][0]);
     $user = User::selectById($db, $id);
@@ -41,7 +41,7 @@ function restHandler ($db, $method, $url, $headers = array(), $postBody = null) 
 
     switch ($method) {
     case "GET":
-      return $user;
+      return new Response(200, $user);
     case "POST":
       $user = updateUser($user, $postBody);
 
@@ -73,10 +73,10 @@ function test_collection ($db) {
 
   $response = restHandler($db, 'GET', '/users');
 
-  echo "2 results? " . count($response) . "\n";
+  echo "2 results? " . count($response->body) . "\n";
   
-  echo "has alice? " . in_array($alice, $response) . "\n";
-  echo "has bob? " . in_array($bob, $response) . "\n";
+  echo "has alice? " . in_array($alice, $response->body) . "\n";
+  echo "has bob? " . in_array($bob, $response->body) . "\n";
 }
 
 function test_create ($db) {
@@ -97,7 +97,7 @@ function test_read ($db) {
   $response = restHandler($db, 'GET', '/users/1');
 
   
-  echo "read: has alice? " . ($response && $response->id == 1) . "\n";
+  echo "read: has alice? " . ($response && $response->body->id == 1) . "\n";
 }
 
 
