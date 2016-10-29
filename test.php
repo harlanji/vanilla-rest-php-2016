@@ -19,10 +19,16 @@ function test () {
   
   $db = setup(new PDO('sqlite::memory:'));
   test_read($db);
+
+  $db = setup(new PDO('sqlite::memory:'));
+  test_read_none($db);
   
   $db = setup(new PDO('sqlite::memory:'));
   test_update($db);
-  
+
+  $db = setup(new PDO('sqlite::memory:'));
+  test_update_none($db);
+
   $db = setup(new PDO('sqlite::memory:'));
   test_delete($db);
 }

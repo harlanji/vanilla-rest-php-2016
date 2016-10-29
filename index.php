@@ -114,6 +114,15 @@ function test_read ($db) {
   echo "has alice? " . ($response && $response->body->id == 1) . "\n";
 }
 
+function test_read_none ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
+  $response = restHandler($db, 'GET', '/users/1');
+
+  echo "right status? " . ($response->status == 404) . "\n";
+}
+
+
 
 function test_update ($db) {
   echo "-- " . __FUNCTION__ . "\n";
@@ -133,6 +142,20 @@ function test_update ($db) {
 
   echo "alice username = Alice X?: " . ($alice->username == "Alice X") . "\n";
 }
+
+function test_update_none ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
+  $userJson = array('username' => 'Alice X');
+  $response = restHandler($db, "POST", "/users/1", array(), $userJson);
+
+  $alice = User::selectById($db, 1);
+  echo "no alice? " . ($alice == null) . "\n";
+
+  echo "right status? " . ($response->status == 404) . "\n";
+}
+
+
 
 
 function test_delete ($db) {
@@ -154,3 +177,15 @@ function test_delete ($db) {
 
   echo "alice deleted?: " . ($alice == null) . "\n";
 }
+
+function test_delete_none ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
+  $userJson = array('username' => 'Alice X');
+  $response = restHandler($db, "DELETE", "/users/1", array(), $userJson);
+
+  echo "right status? " . ($response->status == 404) . "\n";
+}
+
+
+
