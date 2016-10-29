@@ -50,7 +50,7 @@ class User {
 
     if(!$row) { return null; }
     
-    return new User($row['id'], $row['username']);
+    return User::fromRow($row);
   }
 
   static function all ($db) {

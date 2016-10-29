@@ -4,6 +4,9 @@ require('index.php');
 
 test();
 
+
+
+
 function test () {
   $db = setup(new PDO('sqlite::memory:'));
   test_model($db);

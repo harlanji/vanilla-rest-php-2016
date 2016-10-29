@@ -1,78 +1,12 @@
 <?php
 
 require('sql.php');
-
-// --- core
-
-class Response {
-  var $status;
-  var $body;
-  var $headers;
-
-  function __construct($status, $body, $headers = array()) {
-    $this->status = $status;
-    $this->body = $body;
-    $this->headers = $headers;
-  } 
-
-  function __toString() {
-    return 'response code: ' . $this->status;
-  }
-}
-
-// map request to handler
-function handleRequest ($handler, $db) {
-  // -- read
-  $method = $_SERVER['REQUEST_METHOD'];
-  $url = $request['REQUEST_URI'];
-  $headers = array_change_key_case(getallheaders(), CASE_LOWER);
-  $postBody = stream_get_contents(STDIN);
-  $postBody = decodeBody($headers['content-type'], $postBody);
-
-  // -- handle
-  $response = $handler($db, $method, $url, $headers, $postBody);
-
-  // -- defaults
-  if (!($response instanceof Response)) {
-    $response = new Response(200, $response);
-  }
-  if (!array_key_exists('content-type', $response->headers)) {
-    $response->headers['content-type'] = 'text/plain';
-  }
-
-  // -- write
-  http_status_code($response->status);
-  foreach ($response->headers as $k => $v) {
-    header($k . ": " . $v);
-  }
-  echo encodeBody($response->headers['content-type'], $response->body);
-}
-
-
-// ---
-
-function encodebody ($contentType, $bodyText) {
-  if ($contentType == 'application/json') {
-    return json_encode($bodyText);
-  } else {
-    return $bodyText;
-  }
-}
-
-function decodeBody ($contentType, $bodyText) {
-  if ($contentType == "application/json") {
-    return json_decode($bodyText, true);
-  } else if ($contentType == "application/x­www­form­urlencoded") {
-    return $_POST;
-  } else {
-    return $bodyText;
-  }
-}
+require('http.php');
 
 // ---
 
 function updateUser($user, $postBody) {
-  foreach (get_object_vars($user) as $field) {
+  foreach (get_object_vars($user) as $field => $v) {
     if (array_key_exists($field, $postBody)) {
       $user->$field = $postBody[$field];
     }
@@ -93,8 +27,8 @@ function restHandler ($db, $method, $url, $headers = array(), $postBody = null) 
     if ($method == "PUT") {
       if ($user) { return new Response(202, $user); }
 
-      $user = updateUser(new User($id), $postBody);
-      if ($user->create($db)) {
+      $user = updateUser(new User(1, ''), $postBody);
+      if ($user->insert($db)) {
         return new Response(201, $user); 
       } else {
         return new Response(400, 'could not create user');
@@ -111,7 +45,7 @@ function restHandler ($db, $method, $url, $headers = array(), $postBody = null) 
     case "POST":
       $user = updateUser($user, $postBody);
 
-      if ($user->update($user)) {
+      if ($user->update($db)) {
         return new Response(200, $user);
       } else {
         return new Response(400, 'could not update user');
@@ -131,38 +65,67 @@ function restHandler ($db, $method, $url, $headers = array(), $postBody = null) 
 
 
 function test_collection ($db) {
-  $response = restHandler($db, "GET", "/users");
+  $alice = new User(1, 'Alice');
+  $bob = new User(2, 'Bob');
 
-  echo encodeBody('application/json', $response);
+  $alice->insert($db);
+  $bob->insert($db);
 
+  $response = restHandler($db, 'GET', '/users');
+
+  echo "2 results? " . count($response) . "\n";
+  
+  echo "has alice? " . in_array($alice, $response) . "\n";
+  echo "has bob? " . in_array($bob, $response) . "\n";
 }
 
 function test_create ($db) {
-  $userJson = '{"name": "Alice"}';
-  $response = restHandler($db, "PUT", "/users/1", array('content-type' => 'text/json'), $userJson);
+  $userJson = array('id' => 1, 'username' => 'Alice');
+  $response = restHandler($db, "PUT", "/users/1", array(), $userJson);
 
-  echo $response;
+  $alice = User::selectById($db, 1);
+
+  echo "create: alice username = Alice X?: " . ($alice->username == "Alice") . "\n";
 }
 
 
   
 function test_read ($db) {
-  $response = restHandler($db, "GET", "/users/1");
+  $alice = new User(1, 'Alice');
+  $alice->insert($db);
 
-  echo $response;
+  $response = restHandler($db, 'GET', '/users/1');
+
+  
+  echo "read: has alice? " . ($response && $response->id == 1) . "\n";
 }
 
 
 function test_update ($db) {
-  $userJson = '{"name": "Alice"}';
-  $response = restHandler($db, "POST", "/users/1", array('content-type' => 'text/json'), $userJson);
+  $alice = new User(1, 'Alice');
 
-  echo $response;
+  $alice->insert($db);
+
+  $userJson = array('username' => 'Alice X');
+  $response = restHandler($db, "POST", "/users/1", array(), $userJson);
+
+  $alice = User::selectById($db, 1);
+
+  echo "alice username = Alice X?: " . ($alice->username == "Alice X") . "\n";
 }
 
 
 function test_delete ($db) {
   $response = restHandler($db, "DELETE", "/users/1");
 
-  echo $response;
+  $alice = new User(1, 'Alice');
+
+  $alice->insert($db);
+
+  $userJson = array('username' => 'Alice X');
+  $response = restHandler($db, "DELETE", "/users/1");
+
+  $alice = User::selectById($db, 1);
+
+  echo "alice deleted?: " . ($alice == null) . "\n";
 }
