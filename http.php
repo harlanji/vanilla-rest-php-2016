@@ -28,6 +28,15 @@ function handleRequest ($handler, $db) {
   $postBody = stream_get_contents(STDIN);
   $postBody = decodeBody($headers['content-type'], $postBody);
 
+  if (!$headers) {
+    $headers = array();
+  }
+
+  if (!array_key_exists('accept', $headers)) {
+    $headers['accept'] = 'text/plain';
+  }
+
+
   // -- handle
   $response = $handler($db, $method, $url, $headers, $postBody);
 
@@ -37,6 +46,10 @@ function handleRequest ($handler, $db) {
   }
   if (!array_key_exists('content-type', $response->headers)) {
     $response->headers['content-type'] = 'text/plain';
+  }
+
+  if ($headers['accept'] != $response->headers['content-type']) {
+    $response = new Response(500, 'acceptable content type could not be given');
   }
 
   // -- write
