@@ -12,11 +12,11 @@ class Response {
   } 
 
   function __toString() {
-    return 'response code: ' . $this->status;
+    return 'response code: ' . $this->status . ', headers: ' . json_encode($this->headers) . "\n" . $this->body;
   }
 }
 
-function handleRequest_raw ($method, $url, $headers, $postBody) {
+function handleRequest_raw ($method, $url, $headers, $postBody, $handler, $db) {
   if (!$headers) {
     $headers = array();
   }
@@ -24,7 +24,6 @@ function handleRequest_raw ($method, $url, $headers, $postBody) {
   if (!array_key_exists('accept', $headers)) {
     $headers['accept'] = 'text/plain';
   }
-
 
   // -- handle
   $response = $handler($db, $method, $url, $headers, $postBody);
@@ -40,48 +39,27 @@ function handleRequest_raw ($method, $url, $headers, $postBody) {
   }
 
   if ($headers['accept'] != $response->headers['content-type']) {
-    $response = new Response(500, 'acceptable content type could not be given');
+    $response = new Response(406, 'acceptable content type could not be given', array('content-type' => 'text/plain'));
+  } else {
+    $response->body = encodeBody($response->headers['content-type'], $response->body);
   }
-
-  // -- write
-  http_status_code($response->status);
-  foreach ($response->headers as $k => $v) {
-    header($k . ": " . $v);
-  }
-
-  $response->body = encodeBody($response->headers['content-type'], $response->body);
-  
   return $response;
 }
 
 
 // map request to handler
-function handleRequest_apache ($handler, $db) {
+function handleRequest ($handler, $db) {
   // -- read
   $method = $_SERVER['REQUEST_METHOD'];
   $url = $_SERVER['REQUEST_URI'];
   $headers = array_change_key_case(getallheaders(), CASE_LOWER);
-  $postBody = stream_get_contents(STDIN);
+  $postBody = ($method == "POST" || $method == "PUT") ? stream_get_contents(STDIN) : null;
   $postBody = decodeBody($headers['content-type'], $postBody);
 
   $response = handleRequest_raw($method, $url, $headers, $postBody);
 
   writeResponse($response);
 }
-
-function handleRequest ($handler, $db) {
-  // -- read
-  $method = $_GET['REQUEST_METHOD'];
-  $url = $_GET['REQUEST_URI'];
-  $headers = array_change_key_case(getallheaders(), CASE_LOWER);
-  $postBody = stream_get_contents('php://input');
-  $postBody = decodeBody($headers['content-type'], $postBody);
-
-  $response = handleRequest_raw($method, $url, $headers, $postBody);
-
-  writeResponse($response);
-}
-
 
 
 function writeResponse ($response) {

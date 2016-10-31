@@ -5,8 +5,6 @@ require_once('core.php');
 test();
 
 
-
-
 function test () {
   $db = setup(new PDO('sqlite::memory:'));
   test_model($db);
@@ -19,7 +17,6 @@ function test () {
 
   $db = setup(new PDO('sqlite::memory:'));
   test_create_exists($db);
-
 
   $db = setup(new PDO('sqlite::memory:'));
   test_read($db);
@@ -35,6 +32,100 @@ function test () {
 
   $db = setup(new PDO('sqlite::memory:'));
   test_delete($db);
+
+  $db = setup(new PDO('sqlite::memory:'));
+  test_get_handleRequest_ok($db);
+
+  $db = setup(new PDO('sqlite::memory:'));
+  test_get_handleRequest_error($db);
+
+  $db = setup(new PDO('sqlite::memory:'));
+  test_get_handleRequest_404($db);
+
+  $db = setup(new PDO('sqlite::memory:'));
+  test_get_handleRequest_weird_accept($db);
+
+  $db = setup(new PDO('sqlite::memory:'));
+  test_post_handleRequest_ok($db);
+}
+
+
+
+function fakeHandler ($db, $method, $url, $headers, $postBody) {
+  if ($url == "/success") {
+    return new Response(200, "Hello!");
+  } else if ($url == "/error") {
+    return new Response(500, "Error!");
+  } else if ($method == "POST" && $url == "/post") {
+    return new Response(200, $postBody);
+  }
+}
+
+// dummy
+function http_status_code($code) {
+
+}
+
+function test_get_handleRequest_ok ($db) {
+  $headers = array();
+
+  $response = handleRequest_raw("GET", "/success", array(), null, 'fakeHandler', $db);
+
+  echo 'response: ' . $response;
+
+
+  assert($response->status == 200);
+  assert($response->headers['content-type'] == 'text/plain');
+}
+
+function test_get_handleRequest_404 ($db) {
+  $headers = array();
+
+  $response = handleRequest_raw("GET", "/fdsafdfas", array(), null, 'fakeHandler', $db);
+
+  echo 'response: ' . $response;
+
+
+  assert($response->status == 404);
+  assert($response->headers['content-type'] == 'text/plain');
+
+}
+
+function test_get_handleRequest_error ($db) {
+  $headers = array();
+
+  $response = handleRequest_raw("GET", "/error", array(), null, 'fakeHandler', $db);
+
+  echo 'response: ' . $response;
+
+
+  assert($response->status == 500);
+  assert($response->headers['content-type'] == 'text/plain');
+
+}
+
+function test_get_handleRequest_weird_accept ($db) {
+  $headers = array();
+
+  $response = handleRequest_raw("GET", "/success", array('accept' => 'test/weird-format'), null, 'fakeHandler', $db);
+
+  echo 'response: ' . $response;
+
+  assert($response->status == 406);
+  assert($response->headers['content-type'] == 'text/plain');
+
+}
+
+function test_post_handleRequest_ok ($db) {
+  $headers = array();
+
+  $response = handleRequest_raw("POST", "/post", array("content-type", "text/plain"), "some stuff", 'fakeHandler', $db);
+
+  echo 'response: ' . $response;
+
+  assert($response->status == 200);
+  assert($response->headers['content-type'] == 'text/plain');
+  assert($response->body == 'some stuff');
 }
 
 
@@ -74,20 +165,7 @@ function test_model ($db) {
 }
 
 
-// -- REST infra
 
-function fakeHandler ($db, $method, $url, $handlers, $postBody) {
-  if ($url == "/success") {
-    return new Response(200, "success!");
-  } else if ($url == "/error") {
-    return new Response(500, "error!");
-  }
-}
-
-
-function test_handleResponse () {
-
-}
 
 
 // -- REST handler
