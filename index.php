@@ -1,7 +1,7 @@
 <?php
 
-require('core.php');
-require('http.php');
+require_once('core.php');
+require_once('http.php');
 
 
 function fakeHandler ($db, $method, $url, $headers, $postBody) {

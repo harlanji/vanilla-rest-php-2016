@@ -1,8 +1,5 @@
 <?php
 
-
-// --- core
-
 class Response {
   var $status;
   var $body;

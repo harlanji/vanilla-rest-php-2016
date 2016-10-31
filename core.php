@@ -1,7 +1,7 @@
 <?php
 
-require('sql.php');
-require('http.php');
+require_once('sql.php');
+require_once('http.php');
 
 // ---
 
