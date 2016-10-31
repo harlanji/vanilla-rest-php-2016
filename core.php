@@ -5,14 +5,16 @@ require_once('http.php');
 
 // ---
 
+// copy all fields except ID from postBody to User
 function updateUser($user, $postBody) {
   $fieldsUpdated = array();
   foreach (get_object_vars($user) as $field => $v) {
-    if (array_key_exists($field, $postBody)) {
+    if ($field != 'id' && array_key_exists($field, $postBody)) {
       array_push($fieldsUpdated, $field);
       $user->$field = $postBody[$field];
     }
   }
+
   return $fieldsUpdated;
 }
 
@@ -29,13 +31,13 @@ function restHandler ($db, $method, $url, $headers = array(), $postBody = null) 
     if ($method == "PUT") {
       if ($user) { return new Response(202, $user); }
 
-    $user = new User(1, '');
+      $user = new User($id, null);
 
-    if (!count(updateUser($user, $postBody))) {
-      return new Response(401, 'error updating user');
-    }  
+      if (!count(updateUser($user, $postBody)) || !$user->validate()) {
+        return new Response(401, 'error creating user');
+      }  
 
-    if ($user->insert($db)) {
+      if ($user->insert($db)) {
         return new Response(201, $user); 
       } else {
         return new Response(400, 'could not create user');
@@ -50,7 +52,7 @@ function restHandler ($db, $method, $url, $headers = array(), $postBody = null) 
     case "GET":
       return new Response(200, $user);
     case "POST":
-      if (!count(updateUser($user, $postBody))) {
+      if (!$user->validate() || !count(updateUser($user, $postBody))) {
         return new Response(401, 'error updating user');
       }
       

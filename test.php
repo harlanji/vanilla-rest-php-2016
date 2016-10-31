@@ -21,6 +21,9 @@ function test () {
   test_create_exists($db);
 
   $db = setup(new PDO('sqlite::memory:'));
+  test_create_invalid($db);
+
+  $db = setup(new PDO('sqlite::memory:'));
   test_read($db);
 
   $db = setup(new PDO('sqlite::memory:'));
@@ -33,9 +36,14 @@ function test () {
   test_update_none($db);
 
   $db = setup(new PDO('sqlite::memory:'));
+  test_update_invalid($db); 
+
+  $db = setup(new PDO('sqlite::memory:'));
   test_delete($db);
 
   // -- http handler logic
+  test_encoders();
+  
   $db = setup(new PDO('sqlite::memory:'));
   test_get_handleRequest_ok($db);
 
@@ -68,6 +76,27 @@ function fakeHandler ($db, $method, $url, $headers, $postBody) {
 function http_status_code($code) {
 
 }
+
+function test_encoders () {
+  assert(encodeBody("text/plain", "a") == "a");
+  assert(encodeBody("application/json", "a") == "\"a\"");
+
+  assert(decodeBody("text/plain", "a") == "a");
+  assert(decodeBody("application/json", "\"a\"") == "a");
+
+
+  $data = array("a" => 1);
+  assert(strpos("Array", encodeBody("text/plain", $data)) == 0);
+  assert(encodeBody("application/json", $data) == "{\"a\":1}");
+
+  assert(decodeBody("text/plain", "a") == "a");
+  assert(decodeBody("application/json", "{\"a\":1}") == $data);
+
+
+
+
+}
+
 
 function test_get_handleRequest_ok ($db) {
   $headers = array();
@@ -186,6 +215,8 @@ function test_model ($db) {
 // -- REST handler
 
 
+
+
 function test_collection ($db) {
   echo "-- " . __FUNCTION__ . "\n";
 
@@ -213,10 +244,27 @@ function test_create ($db) {
 
   $alice = User::selectById($db, 1);
 
+  echo $response;
+
   echo "right status? " . assert($response->status == 201) . "\n";
 
 
   echo "alice username = Alice?: " . assert($alice->username == "Alice") . "\n";
+}
+
+
+function test_create_invalid ($db) {
+  echo "-- " . __FUNCTION__ . "\n";
+
+  $userJson = array('id' => 1, 'FAKE' => 'Alice');
+  $response = restHandler($db, "PUT", "/users/1", array(), $userJson);
+
+  $alice = User::selectById($db, 1);
+
+  echo "right status? " . assert($response->status == 401) . "\n";
+
+
+  echo "alice null? " . assert($alice == null) . "\n";
 }
 
 function test_create_exists ($db) {
@@ -294,6 +342,24 @@ function test_update_none ($db) {
 
   echo "right status? " . assert($response->status == 404) . "\n";
 }
+
+function test_update_invalid ($db) {
+ echo "-- " . __FUNCTION__ . "\n";
+
+  $alice = new User(1, 'Alice');
+
+  $alice->insert($db);
+
+  $userJson = array('FAKE' => 'Alice X');
+  $response = restHandler($db, "POST", "/users/1", array(), $userJson);
+
+  $alice = User::selectById($db, 1);
+
+  echo "right status? " . assert($response->status == 401) . "\n";
+
+  echo "alice username = Alice?: " . assert($alice->username == "Alice") . "\n";
+}
+
 
 
 

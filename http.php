@@ -12,7 +12,7 @@ class Response {
   } 
 
   function __toString() {
-    return 'response code: ' . $this->status . ', headers: ' . json_encode($this->headers) . "\n" . $this->body;
+    return 'response code: ' . $this->status . ', headers: ' . json_encode($this->headers) . "\n" . json_encode($this->body);
   }
 }
 
@@ -75,11 +75,11 @@ function writeResponse ($response) {
 
 // ---
 
-function encodebody ($contentType, $bodyText) {
+function encodeBody ($contentType, $bodyText) {
   if ($contentType == 'application/json') {
     return json_encode($bodyText);
   } else {
-    return $bodyText;
+    return print_r($bodyText, true);
   }
 }
 
@@ -92,5 +92,3 @@ function decodeBody ($contentType, $bodyText) {
     return $bodyText;
   }
 }
-
-

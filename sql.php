@@ -6,7 +6,7 @@ function setup ($db) {
   $db->setAttribute( PDO::ATTR_CASE, PDO::CASE_LOWER );
   $db->setAttribute( PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC );
 
-  $db->exec("CREATE TABLE users (id INTEGER PRIMARY KEY NOT NULL, username TEXT NOT NULL)") . "\n";
+  $db->exec("CREATE TABLE users (id TEXT PRIMARY KEY NOT NULL, username TEXT NOT NULL)") . "\n";
 
 
   return $db;
@@ -23,7 +23,17 @@ class User {
     $this->id = $id;
     $this->username = $username;
   }
-  
+
+
+  function validate () {
+    return $this->id
+      && strlen($this->username) > 0;
+  }
+
+  static function nextId($db) {
+    return uniqid("user-");
+  }
+
   function insert ($db) {
     return $db->prepare("INSERT INTO users (id, username) VALUES(:id, :username)")
       ->execute(array(':id' => $this->id,
