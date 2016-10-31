@@ -39,8 +39,6 @@ function test () {
 
 
 
-// -- Domain Model
-
 
 
 // -- test
@@ -75,6 +73,21 @@ function test_model ($db) {
   echo "All Users 2: " . json_encode(User::all($db)) . "\n"; // alicex
 }
 
+
+// -- REST infra
+
+function fakeHandler ($db, $method, $url, $handlers, $postBody) {
+  if ($url == "/success") {
+    return new Response(200, "success!");
+  } else if ($url == "/error") {
+    return new Response(500, "error!");
+  }
+}
+
+
+function test_handleResponse () {
+
+}
 
 
 // -- REST handler

@@ -16,15 +16,7 @@ class Response {
   }
 }
 
-// map request to handler
-function handleRequest ($handler, $db) {
-  // -- read
-  $method = $_SERVER['REQUEST_METHOD'];
-  $url = $request['REQUEST_URI'];
-  $headers = array_change_key_case(getallheaders(), CASE_LOWER);
-  $postBody = stream_get_contents(STDIN);
-  $postBody = decodeBody($headers['content-type'], $postBody);
-
+function handleRequest_raw ($method, $url, $headers, $postBody) {
   if (!$headers) {
     $headers = array();
   }
@@ -56,8 +48,52 @@ function handleRequest ($handler, $db) {
   foreach ($response->headers as $k => $v) {
     header($k . ": " . $v);
   }
-  echo encodeBody($response->headers['content-type'], $response->body);
+
+  $response->body = encodeBody($response->headers['content-type'], $response->body);
+  
+  return $response;
 }
+
+
+// map request to handler
+function handleRequest_apache ($handler, $db) {
+  // -- read
+  $method = $_SERVER['REQUEST_METHOD'];
+  $url = $_SERVER['REQUEST_URI'];
+  $headers = array_change_key_case(getallheaders(), CASE_LOWER);
+  $postBody = stream_get_contents(STDIN);
+  $postBody = decodeBody($headers['content-type'], $postBody);
+
+  $response = handleRequest_raw($method, $url, $headers, $postBody);
+
+  writeResponse($response);
+}
+
+function handleRequest ($handler, $db) {
+  // -- read
+  $method = $_GET['REQUEST_METHOD'];
+  $url = $_GET['REQUEST_URI'];
+  $headers = array_change_key_case(getallheaders(), CASE_LOWER);
+  $postBody = stream_get_contents(STDIN);
+  $postBody = decodeBody($headers['content-type'], $postBody);
+
+  $response = handleRequest_raw($method, $url, $headers, $postBody);
+
+  writeResponse($response);
+}
+
+
+
+function writeResponse ($response) {
+  http_status_code($status);
+
+  foreach ($headers as $k => $v) {
+    header($k . ": " . $v);
+  }
+  
+  echo $body;
+}
+
 
 // ---
 
