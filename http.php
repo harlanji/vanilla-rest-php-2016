@@ -74,7 +74,7 @@ function handleRequest ($handler, $db) {
   $method = $_GET['REQUEST_METHOD'];
   $url = $_GET['REQUEST_URI'];
   $headers = array_change_key_case(getallheaders(), CASE_LOWER);
-  $postBody = stream_get_contents(STDIN);
+  $postBody = stream_get_contents('php://input');
   $postBody = decodeBody($headers['content-type'], $postBody);
 
   $response = handleRequest_raw($method, $url, $headers, $postBody);
