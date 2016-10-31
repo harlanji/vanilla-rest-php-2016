@@ -41,7 +41,9 @@ function handleRequest ($handler, $db) {
   $response = $handler($db, $method, $url, $headers, $postBody);
 
   // -- defaults
-  if (!($response instanceof Response)) {
+  if ($response == null) {
+    $response = new Response(404, "not found");
+  }  else if (!($response instanceof Response)) {
     $response = new Response(200, $response);
   }
   if (!array_key_exists('content-type', $response->headers)) {
@@ -59,7 +61,6 @@ function handleRequest ($handler, $db) {
   }
   echo encodeBody($response->headers['content-type'], $response->body);
 }
-
 
 // ---
 
