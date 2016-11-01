@@ -17,9 +17,7 @@ Hitting the `/test.php` endpoint from Docker will run test cases there.
 
 ### TODO 
 
-* [ ] URL mapping
-* [ ] Test cases for HTTP errors
-* [ ] Test cases for REST mapping
+* [ ] validate URL mapping in `handleRequest`
 
 ## Usage
 
