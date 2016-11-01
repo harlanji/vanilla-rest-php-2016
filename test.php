@@ -2,6 +2,11 @@
 
 require_once('core.php');
 
+define("GET_HEADERS", array('accept' => 'application/json'));
+define("JSON_HEADERS", array('content-type' => 'application/json', 'accept' => 'application/json'));
+
+
+
 test();
 
 
@@ -97,42 +102,41 @@ function test_encoders () {
 
 }
 
-
 function test_get_handleRequest_ok ($db) {
   $headers = array();
 
-  $response = handleRequest_raw("GET", "/success", array(), null, 'fakeHandler', $db);
+  $response = handleRequest_raw("GET", "/success", GET_HEADERS, null, 'fakeHandler', $db);
 
   echo 'response: ' . $response;
 
 
   assert($response->status == 200);
-  assert($response->headers['content-type'] == 'text/plain');
+  assert($response->headers['content-type'] == 'application/json');
 }
 
 function test_get_handleRequest_404 ($db) {
   $headers = array();
 
-  $response = handleRequest_raw("GET", "/fdsafdfas", array(), null, 'fakeHandler', $db);
+  $response = handleRequest_raw("GET", "/fdsafdfas", GET_HEADERS, null, 'fakeHandler', $db);
 
   echo 'response: ' . $response;
 
 
   assert($response->status == 404);
-  assert($response->headers['content-type'] == 'text/plain');
+  assert($response->headers['content-type'] == 'application/json');
 
 }
 
 function test_get_handleRequest_error ($db) {
   $headers = array();
 
-  $response = handleRequest_raw("GET", "/error", array(), null, 'fakeHandler', $db);
+  $response = handleRequest_raw("GET", "/error", GET_HEADERS, null, 'fakeHandler', $db);
 
   echo 'response: ' . $response;
 
 
   assert($response->status == 500);
-  assert($response->headers['content-type'] == 'text/plain');
+  assert($response->headers['content-type'] == 'application/json');
 
 }
 
@@ -151,13 +155,13 @@ function test_get_handleRequest_weird_accept ($db) {
 function test_post_handleRequest_ok ($db) {
   $headers = array();
 
-  $response = handleRequest_raw("POST", "/post", array("content-type", "text/plain"), "some stuff", 'fakeHandler', $db);
+  $response = handleRequest_raw("POST", "/post", JSON_HEADERS, '"some stuff"', 'fakeHandler', $db);
 
   echo 'response: ' . $response;
 
   assert($response->status == 200);
-  assert($response->headers['content-type'] == 'text/plain');
-  assert($response->body == 'some stuff');
+  assert($response->headers['content-type'] == 'application/json');
+  assert($response->body == '"some stuff"');
 }
 
 
@@ -240,7 +244,7 @@ function test_create ($db) {
   echo "-- " . __FUNCTION__ . "\n";
 
   $userJson = array('id' => 1, 'username' => 'Alice');
-  $response = restHandler($db, "PUT", "/users/1", array(), $userJson);
+  $response = restHandler($db, "PUT", "/users/1", JSON_HEADERS, $userJson);
 
   $alice = User::selectById($db, 1);
 
@@ -257,7 +261,7 @@ function test_create_invalid ($db) {
   echo "-- " . __FUNCTION__ . "\n";
 
   $userJson = array('id' => 1, 'FAKE' => 'Alice');
-  $response = restHandler($db, "PUT", "/users/1", array(), $userJson);
+  $response = restHandler($db, "PUT", "/users/1", JSON_HEADERS, $userJson);
 
   $alice = User::selectById($db, 1);
 
@@ -275,7 +279,7 @@ function test_create_exists ($db) {
 
 
   $userJson = array('id' => 1, 'username' => 'Alice X');
-  $response = restHandler($db, "PUT", "/users/1", array(), $userJson);
+  $response = restHandler($db, "PUT", "/users/1", JSON_HEADERS, $userJson);
 
   $alice = User::selectById($db, 1);
 
@@ -320,7 +324,7 @@ function test_update ($db) {
   $alice->insert($db);
 
   $userJson = array('username' => 'Alice X');
-  $response = restHandler($db, "POST", "/users/1", array(), $userJson);
+  $response = restHandler($db, "POST", "/users/1", JSON_HEADERS, $userJson);
 
   $alice = User::selectById($db, 1);
 
@@ -335,7 +339,7 @@ function test_update_none ($db) {
   echo "-- " . __FUNCTION__ . "\n";
 
   $userJson = array('username' => 'Alice X');
-  $response = restHandler($db, "POST", "/users/1", array(), $userJson);
+  $response = restHandler($db, "POST", "/users/1", JSON_HEADERS, $userJson);
 
   $alice = User::selectById($db, 1);
   echo "no alice? " . assert($alice == null) . "\n";
@@ -351,7 +355,7 @@ function test_update_invalid ($db) {
   $alice->insert($db);
 
   $userJson = array('FAKE' => 'Alice X');
-  $response = restHandler($db, "POST", "/users/1", array(), $userJson);
+  $response = restHandler($db, "POST", "/users/1", JSON_HEADERS, $userJson);
 
   $alice = User::selectById($db, 1);
 

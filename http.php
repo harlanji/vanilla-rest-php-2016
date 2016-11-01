@@ -1,5 +1,8 @@
 <?php
 
+// see encodeBody and decodeBody
+define("ACCEPT_TYPES", array('text/plain', 'application/json'));
+
 class Response {
   var $status;
   var $body;
@@ -25,6 +28,12 @@ function handleRequest_raw ($method, $url, $headers, $postBody, $handler, $db) {
     $headers['accept'] = 'text/plain';
   }
 
+  if (!in_array($headers['accept'], ACCEPT_TYPES)) {
+    return new Response(406, 'acceptable content type could not be given', array('content-type' => 'text/plain'));
+  }
+
+  $postBody = $postBody ? decodeBody($headers['content-type'], $postBody) : null;
+
   // -- handle
   $response = $handler($db, $method, $url, $headers, $postBody);
 
@@ -35,7 +44,7 @@ function handleRequest_raw ($method, $url, $headers, $postBody, $handler, $db) {
     $response = new Response(200, $response);
   }
   if (!array_key_exists('content-type', $response->headers)) {
-    $response->headers['content-type'] = 'text/plain';
+    $response->headers['content-type'] = $headers['accept'];
   }
 
   if ($headers['accept'] != $response->headers['content-type']) {
@@ -54,7 +63,6 @@ function handleRequest ($handler, $db) {
   $url = $_SERVER['REQUEST_URI'];
   $headers = array_change_key_case(getallheaders(), CASE_LOWER);
   $postBody = ($method == "POST" || $method == "PUT") ? stream_get_contents(STDIN) : null;
-  $postBody = decodeBody($headers['content-type'], $postBody);
 
   $response = handleRequest_raw($method, $url, $headers, $postBody);
 
