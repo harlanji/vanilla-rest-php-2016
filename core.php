@@ -52,7 +52,7 @@ function restHandler ($db, $method, $url, $headers = array(), $postBody = null) 
     case "GET":
       return new Response(200, $user);
     case "POST":
-      if (!$user->validate() || !count(updateUser($user, $postBody))) {
+      if (!count(updateUser($user, $postBody)) || !$user->validate()) {
         return new Response(401, 'error updating user');
       }
       
