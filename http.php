@@ -64,7 +64,7 @@ function handleRequest ($handler, $db) {
   $headers = array_change_key_case(getallheaders(), CASE_LOWER);
   $postBody = ($method == "POST" || $method == "PUT") ? stream_get_contents(STDIN) : null;
 
-  $response = handleRequest_raw($method, $url, $headers, $postBody);
+  $response = handleRequest_raw($method, $url, $headers, $postBody, $handler, $db);
 
   writeResponse($response);
 }
